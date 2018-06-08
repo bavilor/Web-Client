@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Web Client</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<link rel="stylesheet" href = "css/table.css">  </link>		
+	</head>
+	<body>
+		<div id="webclient">
+			<table id="table" align="center">
+  				<thead>
+  					<tr>
+  						<th style="width: 80px;"> Name </th>
+  						<th style="width: 80px;"> Price </th>
+  						<th style="width: 80px;"> Amount</th>
+  					</tr>
+  				</thead>	
+  				<tbody>
+					<tr v-for='record in tableData'>
+						<td width="100px" align="center"> {{ record.name }} </td>
+						<td width="100px" align="center">  {{ record.price }}</td>
+						<td>
+							<input type="number" name="amount" min="0" @keypress ="keyPress" v-model="record.amount" placeholder="0">
+						</td>
+					</tr>
+  				</tbody>
+  			</table>
+  			<p align="center"> Total price: {{ totalPrice }} </p>
+  			<div id="webclient" align="center">
+		  		<button @click="makeOrder" > Make order </button>
+		  		<button @click="getOrderList" :disabled="disabledUpdButton"> Update order </button>	
+		  		<button @click="sendUpdOrder" :disabled="disabledSendUpdButton" > Send upd order </button>
+	  		</div>
+		</div>
+		<script src="./js/help.js"></script>
+		<script src="./js/request.js"></script>
+		<script src="./js/crypto.js"></script>
+		<script src="./js/dataBase.js"></script>
+		<script src="./js/index.js"></script>
+	</body>
+</html>
