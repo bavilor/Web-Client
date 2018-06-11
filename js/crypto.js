@@ -1,4 +1,3 @@
-
 //Inport SPK
 function importPSK(data){
   	return window.crypto.subtle.importKey(
@@ -69,12 +68,12 @@ function decryptRsaData(data, privateKey){
 }
 
 //Encrypt data by use server RSA key
-function encryptRsaData(data){
+function encryptRsaData(data, serverPublicKey){
   	return window.crypto.subtle.encrypt(
   	{
     	name: "RSA-OAEP"
   	},
-  	publicServerKey,
+  	serverPublicKey,
   	data
   	)
   	.then(data => {
@@ -116,8 +115,8 @@ function getAESFromResponse(data, privateKey){
 function decryptAesData(aes, iv, data){
   	return window.crypto.subtle.decrypt(
     {
-      	name: 'AES-CBC',
-      	iv: iv
+      name: 'AES-CBC',
+      iv: iv
     },
     aes,
     data)

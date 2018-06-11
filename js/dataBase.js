@@ -1,4 +1,5 @@
 var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+var allKeyPairs;
 
 function writeKeyPair (keyPair) {
 
@@ -7,7 +8,6 @@ function writeKeyPair (keyPair) {
 	open.onupgradeneeded = function() {
 	    var db = open.result;
 	    var store = db.createObjectStore("keyPair", {keyPath: "id", autoIncrement: true});
-	    writeKeyPair(keyPair);
 	};
 
 	open.onsuccess = function() {
@@ -16,7 +16,8 @@ function writeKeyPair (keyPair) {
 	    var store = tx.objectStore("keyPair");
 
 	   	store.put(keyPair);
-	   	console.log(3);
+	   	console.log("Keys're saved");
+
 	    tx.oncomplete = function() {
 	        db.close();
 	    };
@@ -41,12 +42,12 @@ function readKeyPairs(){
 	    var store = tx.objectStore("keyPair");
 
 
-	   	var keyPairs = store.getAll();
+	   	var request = store.getAll();
 
-	    getJohn.onsuccess = function() {
-	        console.log(keyPairs);
+	    request.onsuccess = function() {
+	        allKeyPairs = request.result;
+	        console.log("Keys're downloaded");
 	    };
-
 	    tx.oncomplete = function() {
 	        db.close();
 	    };

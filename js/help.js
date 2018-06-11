@@ -6,6 +6,7 @@ btoa -> string.charCodeAt(i) -> JSON.stringify
 function objArr2Buffer(objArr){
   var buf = new ArrayBuffer(objArr.length);
   var bufView = new Uint8Array(buf);
+
   for(var i = 0; i < objArr.length; i++){
     bufView[i] = objArr[i];
   }
@@ -16,6 +17,7 @@ function objArr2Buffer(objArr){
 function arrayBufferToString(arrayBuffer) {
   var str = '';
   var bytes = new Uint8Array(arrayBuffer);
+
   for (var i = 0; i < bytes.byteLength; i++) {
       str += String.fromCharCode(bytes[i]);
   }
@@ -26,14 +28,17 @@ function arrayBufferToString(arrayBuffer) {
 function string2ArrayBuffer(string) {
   var buf = new ArrayBuffer(string.length); 
   var bufView = new Uint8Array(buf);
+
   for (var i=0; i < string.length; i++) {
     bufView[i] = string.charCodeAt(i);
   }
   return buf;
 }
 
+//convert string to uint8 array
 function string2Uint8Array(string){
 	var uint8 = new Array();
+
 	for (var i=0; i < string.length; i++) {
     	uint8[i] = string.charCodeAt(i);
  	}
@@ -50,18 +55,12 @@ function Order(id, name, price, amount){
 
 //Generate order list by use the products and amount arrays
 function generateOrderList(order){
-	let length = order.length;
 	let list = new Array();
-	var x = 0;
-	for(var i = 0; i < length; i++){
-		for(var j = x; j < length; j++){
-			if(order[j].amount !== "0"){
-				list[i] = order[j];
-				x = j + 1;
-				break;	
-			}	
+
+	for(var i = 0; i < order.length; i++){
+		if(order[i].amount !== "0"){
+			list[list.length] = order[i];	
 		}
-		
 	}
 	return list;
 }
@@ -118,4 +117,24 @@ function uniteArraysForUpdate(wrappedAes, encrIv, encrData, sign){
 		result[i] = sign[i - aesIvDataLength];
 	}
 	return arrayBufferToString(objArr2Buffer(result));
+}
+
+function getOrder(encrAES, encrIV, encrData, privateKey){
+	var secretKey;
+	
+	return getAESFromResponse(encrAES, privateKey)
+	.then(restoredAes => {
+		secretKey = restoredAes;
+		if(secretKey === undefined ){
+			break;
+		}
+		return decryptRsaData(encrIV, privateKey);
+	})
+	.then(decrIv => {
+		return decryptAesData(secretKey, decrIv, encrData);
+	})
+	.then(data => {
+		return arrayBufferToString(data);
+	})
+	
 }
