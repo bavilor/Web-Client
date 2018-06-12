@@ -52,26 +52,17 @@ function requestServerPublicKey(url, b64UPK){
 
 //request orders
 function requestOrders(url, b64UPK, privateKey){
-	var position = 0;
-	var stringOrders;
-	var secretKey;
-	var encryptedData;
-
 	return requestGET(url, b64UPK)  //request data
 	.then(serverResponse => {
 	    return string2ArrayBuffer(atob(serverResponse)); //read aes key    
 	})
-	.then(encryptedData => {
-		this.encryptedData = encryptedData;
+	.then(encryptedData => {		
 		var position = 0;
-		var index = 0;
+		var keyIndex = 0;
 		var len;
 		var orders = "";
 
-		
-
 		var e = new Promise((resolve, reject) => {
-			console.log("SANM");
 			var x = function(){		
 				return decryptRsaData(encryptedData.slice(position + 512, position + 768), currentKeyPair.privateKey)
 				.then(length => {
@@ -80,16 +71,19 @@ function requestOrders(url, b64UPK, privateKey){
 					var encrIV = encryptedData.slice(position + 256, position + 512);
 					var encrData = encryptedData.slice(position + 768, position + 768 + len);
 
-					return getOrder(encrAES, encrIV, encrData, allKeyPairs[index].privateKey);
+					return getOrder(encrAES, encrIV, encrData, allKeyPairs[keyIndex].privateKey);
 				})
 				.then(order => {
-					orders += order;
-
-					if(index < allKeyPairs.length - 1){
-						index++;
+					if(order !== ""){
+						console.log(order);
+						orders += order;
+					}
+				
+					if(keyIndex < allKeyPairs.length - 1){
+						keyIndex++;
 						return x();
 					}else if (position < encryptedData.byteLength){
-						index = 0;
+						keyIndex = 0;
 						position += 768 + len;
 						return x();
 					}else{
@@ -101,84 +95,10 @@ function requestOrders(url, b64UPK, privateKey){
 		})
 		return e;
 	})
-	.then(rr => {
-		console.log(rr);
+	.then(orders => {
+		return JSON.parse(orders.replace(/\]\[/g, ","));
 	})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		/*encrOrders = result;
-		return new Promise ((resolve, reject) => {
-			resolve(func());
-		}) 
-
-		function func(){
-			var encrAES = encrOrders.slice(position, position + 256);
-			var encrIV = encrOrders.slice(position + 256, position + 512);
-			var length;
-			var stringOrders;
-				
-			return decryptRsaData(encrOrders.slice(position + 512, position + 768), privateKey)
-			.then(result => {
-				length = parseInt(arrayBufferToString(result));
-
-				var encrData = encrOrders.slice(position + 768, position + 768 + length);
-				
-
-				position = position + 768 + length;
-
-				for(var i = 0; i < allKeyPairs.length; i++) {
-					getOrder(encrAES, encrIV, encrData, allKeyPairs[i].privateKey)
-					.then(result => {
-						if(result === undefined || result === ""){
-
-						}else if (stringOrders === undefined){
-							stringOrders = result;
-						}else{
-							stringOrders += ", " + result;
-						}	
-					})	
-				}
-				
-				if(position < encrOrders.byteLength){
-					func()
-				}else{
-					return "gher";
-				}
-			})		
-		}		
-	})
-	.then(re => {
-		console.log("wre " + re);
-	})*/
 }
-
-
-
-
-
 
 //Send data
 function sendData(list, url, encodedUPK, serverPublicKey, update){
@@ -208,24 +128,29 @@ function sendData(list, url, encodedUPK, serverPublicKey, update){
 		var result;
 		if(!update){
 			var data = btoa(uniteArrays(wrappedAes, encryptedIv, encryptedData));
-			result = requestPOST(url, data, encodedUPK);
+			return requestPOST(url, data, encodedUPK);
 		}else{
-			generateRsaPss()
+			return generateRsaPss()
 			.then(key => {
 				privateRsaPssKey = key.privateKey;	
 				return exportRsaPss(key.publicKey);
 			})
 			.then(exportedRsaPss => {
-				expRsaPss = exportedRsaPss;
-				return signingData(privateRsaPssKey, signSession);
+				expRsaPss = JSON.stringify(
+								string2Uint8Array(
+									btoa(
+										arrayBufferToString(exportedRsaPss))));
+
+				return signingData(privateRsaPssKey, string2ArrayBuffer("key")); //should use headers!!!
 			})
 			.then(signedData => {
 				var data = btoa(uniteArraysForUpdate(wrappedAes, encryptedIv, encryptedData, signedData));
-				return requestPOST(url, data, encryptedUserSession,btoa(arrayBufferToString(expRsaPss)));
+				return requestPOST(url, data, encodedUPK, expRsaPss);
 			})
 		}
-	
-		return result;
+	})
+	.then(response => {
+		return response;
 	})
 	.catch(error => {
 		console.error(error);
@@ -251,16 +176,15 @@ function requestGET(url, b64UPK){
 }
 
 //POST request
-function requestPOST(url, data, encodedUPK, rsaPssKey){
+function requestPOST(url, data, encodedUPK, encodedPSS){
   	console.log("POST request");
-
   	return $.ajax({
     	type: 'POST',
     	contentType:'application/json',
     	url: url,
     	beforeSend: request => {
-      		request.setRequestHeader('key', encodedUPK);
-      		request.setRequestHeader('rsaPssKey', rsaPssKey);
+      		request.setRequestHeader("key", encodedUPK);
+      		request.setRequestHeader("sign", encodedPSS);
     	},
     	data: data,
   	})

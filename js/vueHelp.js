@@ -44,7 +44,7 @@ function getProductList(){
 
 //send order list
 function sendOrderList(tableData){
-  	let list = generateOrderList(tableData);
+  	var list = generateOrderList(tableData);
   	var totalPrice = 0;
 
   	if(list.length === 0){
@@ -66,16 +66,35 @@ function sendOrderList(tableData){
 }
 
 //get all orders 
-function getAllOrders(){
+function getAllOrders(tableData){
   	requestOrders(getOrderURL, encodedUPK, currentKeyPair.privateKey)
-  /*	.then(resp => {
-  		for(let i = 0; i < this.tableData.length; i++){
-			for(let j = 0; j < resp.length; j++){
-				if(this.tableData[i].name == resp[j].name){
-					this.tableData[i].amount = resp[j].amount;
-				}
-			}
-		}
-  		this.disabledSendUpdButton = false;
-  	})*/
+  	.then(ordersArray => {
+  		for(var i = 0; i < tableData.length; i++){
+  			tableData[i].amount = "0";
+  			for(var j = 0; j < ordersArray.length; j++){
+  				if(tableData[i].name === ordersArray[j].name){
+  					tableData[i].amount = parseInt(tableData[i].amount) + ordersArray[j].amount;
+  				}
+  			}
+  		}
+  	})
+}
+
+function sendUpdOrderList(tableData){
+	var totalPrice = 0;
+  	var list = generateOrderList(tableData);
+
+  	requestServerPublicKey(getSPKURL, encodedUPK)
+  	.then(serverPublicKey => {
+  		return sendData(list, updOrderURL, encodedUPK, serverPublicKey, true);
+  	})	
+  	.then(response => {
+  		if(response === 200){
+  			for(var i = 0; i < list.length; i++){
+  				totalPrice += (list[i].price * list[i].amount);
+  			}
+  			webclient.totalPrice = totalPrice;
+  			console.log(JSON.stringify(deletedKeyPairs));
+  		}
+  	})	
 }

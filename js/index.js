@@ -36,15 +36,11 @@ var webclient = new Vue({
   			sendOrderList(this.tableData);	 			
   		},
   		getOrderList: function(){
-  			getAllOrders();
+  			getAllOrders(this.tableData);
+  			this.disabledSendUpdButton = false;
   		},
   		sendUpdOrder: function(){
-  			this.totalPrice = 0;
-  			let list = generateOrderList(this.tableData);
-  			sendData(list, updOrderURL, true);
-  			for(var i = 0; i < list.length; i++){
-  				this.totalPrice += (list[i].price * list[i].amount);
-  			}
+  			sendUpdOrderList(this.tableData);
   		}
 	},
 	created: function(){	

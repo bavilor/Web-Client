@@ -124,8 +124,10 @@ function getOrder(encrAES, encrIV, encrData, privateKey){
 	
 	return getAESFromResponse(encrAES, privateKey)
 	.then(result => {
-		secretKey = result;
-		console.log(result);
+		secretKey = result;	
+		if(secretKey !== undefined){
+			deletedKeyPairs[deletedKeyPairs.length] = privateKey;
+		}
 		return decryptRsaData(encrIV, privateKey);
 	})
 	.then(result => {

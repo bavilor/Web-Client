@@ -1,5 +1,6 @@
 var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 var allKeyPairs;
+var deletedKeyPairs = new Array();
 
 function writeKeyPair (keyPair) {
 
