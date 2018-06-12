@@ -68,9 +68,6 @@ function sendOrderList(tableData){
 //get all orders 
 function getAllOrders(){
   	requestOrders(getOrderURL, encodedUPK, currentKeyPair.privateKey)
-  	
-
-
   /*	.then(resp => {
   		for(let i = 0; i < this.tableData.length; i++){
 			for(let j = 0; j < resp.length; j++){

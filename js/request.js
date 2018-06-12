@@ -55,46 +55,130 @@ function requestOrders(url, b64UPK, privateKey){
 	var position = 0;
 	var stringOrders;
 	var secretKey;
-	var encrOrders;
+	var encryptedData;
 
-	requestGET(url, b64UPK)  //request data
-	.then(response => {
-	    return string2ArrayBuffer(atob(response)); //read aes key    
+	return requestGET(url, b64UPK)  //request data
+	.then(serverResponse => {
+	    return string2ArrayBuffer(atob(serverResponse)); //read aes key    
 	})
-	.then(orders => {
-		encrOrders = orders;
-		func();	
+	.then(encryptedData => {
+		this.encryptedData = encryptedData;
+		var position = 0;
+		var index = 0;
+		var len;
+		var orders = "";
+
+		
+
+		var e = new Promise((resolve, reject) => {
+			console.log("SANM");
+			var x = function(){		
+				return decryptRsaData(encryptedData.slice(position + 512, position + 768), currentKeyPair.privateKey)
+				.then(length => {
+					len = parseInt(arrayBufferToString(length));
+					var encrAES = encryptedData.slice(position, position + 256);
+					var encrIV = encryptedData.slice(position + 256, position + 512);
+					var encrData = encryptedData.slice(position + 768, position + 768 + len);
+
+					return getOrder(encrAES, encrIV, encrData, allKeyPairs[index].privateKey);
+				})
+				.then(order => {
+					orders += order;
+
+					if(index < allKeyPairs.length - 1){
+						index++;
+						return x();
+					}else if (position < encryptedData.byteLength){
+						index = 0;
+						position += 768 + len;
+						return x();
+					}else{
+						return orders;
+					}	
+				})
+			}
+			resolve(x());
+		})
+		return e;
+	})
+	.then(rr => {
+		console.log(rr);
+	})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/*encrOrders = result;
+		return new Promise ((resolve, reject) => {
+			resolve(func());
+		}) 
+
 		function func(){
 			var encrAES = encrOrders.slice(position, position + 256);
 			var encrIV = encrOrders.slice(position + 256, position + 512);
 			var length;
+			var stringOrders;
 				
-			decryptRsaData(encrOrders.slice(position + 512, position + 768), privateKey)
-			.then(decrLength => {
-				length = parseInt(arrayBufferToString(decrLength));
+			return decryptRsaData(encrOrders.slice(position + 512, position + 768), privateKey)
+			.then(result => {
+				length = parseInt(arrayBufferToString(result));
 
 				var encrData = encrOrders.slice(position + 768, position + 768 + length);
+				
 
 				position = position + 768 + length;
-				var x;
+
 				for(var i = 0; i < allKeyPairs.length; i++) {
 					getOrder(encrAES, encrIV, encrData, allKeyPairs[i].privateKey)
 					.then(result => {
-						console.log(typeof(result));
-						stringOrders += ", " + result;
-						console.log(stringOrders);
+						if(result === undefined || result === ""){
+
+						}else if (stringOrders === undefined){
+							stringOrders = result;
+						}else{
+							stringOrders += ", " + result;
+						}	
 					})	
 				}
 				
 				if(position < encrOrders.byteLength){
 					func()
+				}else{
+					return "gher";
 				}
 			})		
 		}		
 	})
-
-	console.log(stringOrders);
+	.then(re => {
+		console.log("wre " + re);
+	})*/
 }
+
+
+
+
+
 
 //Send data
 function sendData(list, url, encodedUPK, serverPublicKey, update){

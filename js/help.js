@@ -123,18 +123,15 @@ function getOrder(encrAES, encrIV, encrData, privateKey){
 	var secretKey;
 	
 	return getAESFromResponse(encrAES, privateKey)
-	.then(restoredAes => {
-		secretKey = restoredAes;
-		if(secretKey === undefined ){
-			break;
-		}
+	.then(result => {
+		secretKey = result;
+		console.log(result);
 		return decryptRsaData(encrIV, privateKey);
 	})
-	.then(decrIv => {
-		return decryptAesData(secretKey, decrIv, encrData);
+	.then(result => {
+		return decryptAesData(secretKey, result, encrData);
 	})
-	.then(data => {
-		return arrayBufferToString(data);
+	.then(result => {
+		return arrayBufferToString(result);
 	})
-	
 }
