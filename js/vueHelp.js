@@ -3,6 +3,7 @@ var sendOrderURL = 'http://localhost:8080/setOrder';
 var getOrderURL = 'http://localhost:8080/getOrder';
 var updOrderURL = "http://localhost:8080/updateOrder";
 var getSPKURL = "http://localhost:8080/getServerPublicKey";
+var deleteURL = "http://localhost:8080/deleteUsers";
 var currentKeyPair;
 var encodedUPK;
 
@@ -94,7 +95,17 @@ function sendUpdOrderList(tableData){
   				totalPrice += (list[i].price * list[i].amount);
   			}
   			webclient.totalPrice = totalPrice;
-  			console.log(JSON.stringify(deletedKeyPairs));
+
+  			exportUPK(currentKeyPair.publicKey)
+  			.then(currentExpUPK => {
+  				return getEncodedKeys(deleteKeyPairs,btoa(arrayBufferToString(currentExpUPK)));
+  			})
+  			.then(result => {
+  				requestPOST(deleteURL, JSON.stringify(result), encodedUPK);
+  				indexedDB.deleteDatabase("KeyStore");
+  				writeKeyPair(currentKeyPair);
+  				readKeyPairs();
+  			})	
   		}
   	})	
 }

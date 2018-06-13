@@ -75,7 +75,7 @@ function requestOrders(url, b64UPK, privateKey){
 				})
 				.then(order => {
 					if(order !== ""){
-						console.log(order);
+						deleteKeyPairs[deleteKeyPairs.length] = allKeyPairs[keyIndex].publicKey;
 						orders += order;
 					}
 				
@@ -156,6 +156,37 @@ function sendData(list, url, encodedUPK, serverPublicKey, update){
 		console.error(error);
 	})
 }
+
+//get deleted keys
+function getEncodedKeys(deleteKeys, currentExpUPK){
+	var index = 0;
+	var keysArray = new Array();
+	var keysArrayIndex = 0;
+
+	var e = new Promise((resolve, reject) => {
+			var x = function(){		
+				return exportUPK(deleteKeys[index])
+				.then(exportedKey => {
+					var k = btoa(arrayBufferToString(exportedKey));
+					if(k !== currentExpUPK){
+						keysArray[keysArrayIndex] = k;
+						keysArrayIndex++;
+					}
+
+					index++;
+
+					if(deleteKeys.length > index){
+						return x();
+					}else{
+						return keysArray;
+					}
+				})
+			}
+			resolve(x());
+		})
+		return e;
+}
+
 
 //GET request
 function requestGET(url, b64UPK){
