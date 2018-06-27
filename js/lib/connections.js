@@ -1,6 +1,41 @@
-var publicUserKey;
-var privateUserKey;
+function requestGET(b64RsaPublicKey, url){
+  	console.log("GET request");
+  	return $.ajax({
+    	type: 'GET',
+    	url: url,
+    	beforeSend: request => {
+      		request.setRequestHeader('key', b64RsaPublicKey);
+    	}
+  	})
+  	.catch(err => {
+    	console.error(err);
+  	});
+}
 
+//POST request
+function requestPOST(url, data, b64RsaPublicKey, b64PssPublicKey){
+  	console.log("POST request");
+  	return $.ajax({
+    	type: 'POST',
+    	contentType:'application/json',
+    	url: url,
+    	beforeSend: request => {
+      		request.setRequestHeader("key", b64RsaPublicKey);
+      		request.setRequestHeader("sign", b64PssPublicKey);
+    	},
+    	data: data,
+  	})
+  	.then(function(xml, textStatus, xhr) {
+        return xhr.status;
+    })
+  	.catch(err => {
+    	console.error(err);
+  	})  	
+}
+
+
+
+/*
 //Request data
 function requestProductList(url, b64UPK, privateKey){
  	let aes;
@@ -67,6 +102,7 @@ function requestOrders(url, b64UPK, privateKey){
 				return decryptRsaData(encryptedData.slice(position + 512, position + 768), currentKeyPair.privateKey)
 				.then(length => {
 					len = parseInt(arrayBufferToString(length));
+					console.log(len)
 					var encrAES = encryptedData.slice(position, position + 256);
 					var encrIV = encryptedData.slice(position + 256, position + 512);
 					var encrData = encryptedData.slice(position + 768, position + 768 + len);
@@ -186,43 +222,5 @@ function getEncodedKeys(deleteKeys, currentExpUPK){
 		})
 		return e;
 }
+*/
 
-
-//GET request
-function requestGET(url, b64UPK){
-  	console.log("GET request");
-  	return $.ajax({
-    	type: 'GET',
-    	url: url,
-    	beforeSend: request => {
-      		request.setRequestHeader('key', b64UPK);
-    	}
-  	})
-  	.then(response => {
-    	return response;
-  	})
-  	.catch(err => {
-    	console.error(err);
-  	});
-}
-
-//POST request
-function requestPOST(url, data, encodedUPK, encodedPSS){
-  	console.log("POST request");
-  	return $.ajax({
-    	type: 'POST',
-    	contentType:'application/json',
-    	url: url,
-    	beforeSend: request => {
-      		request.setRequestHeader("key", encodedUPK);
-      		request.setRequestHeader("sign", encodedPSS);
-    	},
-    	data: data,
-  	})
-  	.then(function(xml, textStatus, xhr) {
-        return xhr.status;
-    })
-  	.catch(err => {
-    	console.error(err);
-  	})  	
-}

@@ -7,37 +7,20 @@
 		<link rel="stylesheet" href = "css/table.css">  </link>		
 	</head>
 	<body>
-		<div id="webclient">
-			<table id="table" align="center">
-  				<thead>
-  					<tr>
-  						<th style="width: 80px;"> Name </th>
-  						<th style="width: 80px;"> Price </th>
-  						<th style="width: 80px;"> Amount</th>
-  					</tr>
-  				</thead>	
-  				<tbody>
-					<tr v-for='record in tableData'>
-						<td width="100px" align="center"> {{ record.name }} </td>
-						<td width="100px" align="center">  {{ record.price }}</td>
-						<td>
-							<input type="number" name="amount" min="0" @keypress ="keyPress" v-model="record.amount" placeholder="0">
-						</td>
-					</tr>
-  				</tbody>
-  			</table>
-  			<p align="center"> Total price: {{ totalPrice }} </p>
-  			<div id="webclient" align="center">
-		  		<button @click="makeOrder" > Make order </button>
-		  		<button @click="getOrderList"> Update order </button>	
-		  		<button @click="sendUpdOrder" :disabled="disabledSendUpdButton" > Send upd order </button>
-	  		</div>
+		<div id="web-client" align="center">
+			<custom-table v-bind:products="productList"> </custom-table>
+		  	<button @click="makeOrder" > Make order </button>
+		  	<button @click="requestOrderList"> Request all orders </button>
+		  <!-- 	<button @click="sendUpdOrder" :disabled="disabledSendUpdButton" > Send upd order </button> -->
+		  	<button @click="createKeyPair"> Generate new key pair </button>
 		</div>
-		<script src="./js/help.js"></script>
-		<script src="./js/request.js"></script>
-		<script src="./js/crypto.js"></script>
-		<script src="./js/dataBase.js"></script>
-		<script src="./js/vueHelp.js"></script>
-		<script src="./js/index.js"></script>
+		<script src="./js/lib/help.js"></script>
+		<script src="./js/lib/connections.js"></script>
+		<script src="./js/lib/cryptography.js"></script>
+		<script src="./js/lib/indexedDB.js"></script>
+		<script src="./js/lib/vueHelp.js"></script>
+		<script src="./js/components/TableInputField.vue"></script>
+		<script src="./js/components/Table.vue"></script>
+		<script src="./index.js"></script>
 	</body>
 </html>

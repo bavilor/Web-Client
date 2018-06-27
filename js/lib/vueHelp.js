@@ -1,8 +1,5 @@
-var productsURL = 'http://localhost:8080/getProducts';
-var sendOrderURL = 'http://localhost:8080/setOrder';
-var getOrderURL = 'http://localhost:8080/getOrder';
+
 var updOrderURL = "http://localhost:8080/updateOrder";
-var getSPKURL = "http://localhost:8080/getServerPublicKey";
 var deleteURL = "http://localhost:8080/deleteUsers";
 var currentKeyPair;
 var encodedUPK;
@@ -32,7 +29,7 @@ function getProductList(){
 		let arr = new Array();
 
 		for(let i = 0; i < resp.length; i++){
-			arr[i] = new Order(resp[i].id, resp[i].name, resp[i].price, "0")
+			arr[i] = new Order(resp[i].name, resp[i].price, 0)
 		}
 		writeKeyPair(currentKeyPair);
 		readKeyPairs();
@@ -101,7 +98,7 @@ function sendUpdOrderList(tableData){
   				return getEncodedKeys(deleteKeyPairs,btoa(arrayBufferToString(currentExpUPK)));
   			})
   			.then(result => {
-  				requestPOST(deleteURL, JSON.stringify(result), encodedUPK);
+  				requestPOST(deleteURL, JSON.stringify(result), encodedUPK, sign);
   				indexedDB.deleteDatabase("KeyStore");
   				writeKeyPair(currentKeyPair);
   				readKeyPairs();

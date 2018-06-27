@@ -2,19 +2,23 @@
 btoa -> string.charCodeAt(i) -> JSON.stringify
 */
 
-//Return arrayBuffer from array object
-function objArr2Buffer(objArr){
-  var buf = new ArrayBuffer(objArr.length);
+function transformPublicKey (publicKeyArrayBuffer){
+			var str = arrayBuffer2String(publicKeyArrayBuffer);
+			b64str = btoa(str);
+			return string2Uint8Array(b64str);
+}
+
+function objArr2Buffer(array){
+  var buf = new ArrayBuffer(array.length);
   var bufView = new Uint8Array(buf);
 
-  for(var i = 0; i < objArr.length; i++){
-    bufView[i] = objArr[i];
+  for(var i = 0; i < array.length; i++){
+    bufView[i] = array[i];
   }
   return buf;
 }
 
-//Restore string data from arrayBuffer
-function arrayBufferToString(arrayBuffer) {
+function arrayBuffer2String(arrayBuffer) {
   var str = '';
   var bytes = new Uint8Array(arrayBuffer);
 
@@ -24,7 +28,6 @@ function arrayBufferToString(arrayBuffer) {
   return str;
 }
 
-//Convert string to arrayBuffer
 function string2ArrayBuffer(string) {
   var buf = new ArrayBuffer(string.length); 
   var bufView = new Uint8Array(buf);
@@ -35,7 +38,6 @@ function string2ArrayBuffer(string) {
   return buf;
 }
 
-//convert string to uint8 array
 function string2Uint8Array(string){
 	var uint8 = new Array();
 
@@ -45,15 +47,12 @@ function string2Uint8Array(string){
  	return uint8;
 }
 
-//Order object
-function Order(id, name, price, amount){
-	this.id = id;
+function Order(name, price, amount){
 	this.name = name;
 	this.price = price;
 	this.amount = amount;
 }
 
-//Generate order list by use the products and amount arrays
 function generateOrderList(order){
 	let list = new Array();
 
@@ -65,7 +64,6 @@ function generateOrderList(order){
 	return list;
 }
 
-//Unite wrapped aes, encrypted iv and data
 function uniteArrays(wrappedAes, encrIv, encrData){
 	let wrappedAes8 = new Uint8Array(wrappedAes);
 	let encrIv8 = new Uint8Array(string2ArrayBuffer(encrIv));
@@ -90,7 +88,6 @@ function uniteArrays(wrappedAes, encrIv, encrData){
 	return arrayBufferToString(objArr2Buffer(result));
 }
 
-//Unite wrapped aes, encrypted iv, data, public rsa-pss key and sign
 function uniteArraysForUpdate(wrappedAes, encrIv, encrData, sign){
 	
 	let wrappedAes8 = new Uint8Array(wrappedAes);
