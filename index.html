@@ -9,10 +9,11 @@
 	<body>
 		<div id="web-client" align="center">
 			<custom-table v-bind:products="productList"> </custom-table>
-		  	<button @click="makeOrder" > Make order </button>
-		  	<button @click="requestOrderList"> Request all orders </button>
-		  <!-- 	<button @click="sendUpdOrder" :disabled="disabledSendUpdButton" > Send upd order </button> -->
-		  	<button @click="createKeyPair"> Generate new key pair </button>
+		  	<button @click="clickMakeOrder" > Make order </button>
+		  	<button @click="clickRequestOrderList"> Request all orders </button>
+		  	<button @click="clickRequestProductList"> Request product list </button>
+		  	<button @click="clickSendUpdOrder" :disabled="disabledSendUpdButton" > Send upd order </button>
+		  	<button @click="clickCreateKeyPair"> Generate new key pair </button>
 		</div>
 		<script src="./js/lib/help.js"></script>
 		<script src="./js/lib/connections.js"></script>

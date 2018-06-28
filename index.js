@@ -8,7 +8,6 @@ var webclient = new Vue({
 	data:function(){
 		return {
 			productList: [],
-			totalPrice: 0,
 			disabledSendUpdButton: true, 
 			currentKeyPair: undefined,
 			b64RsaPublicKey: String, 
@@ -17,7 +16,7 @@ var webclient = new Vue({
 	},
 
 	methods:{
-		makeOrder: function(){
+		clickMakeOrder: function(){
 			var isEmpty = true;
 			var orderList = [];
 
@@ -46,7 +45,7 @@ var webclient = new Vue({
 					return requestPOST(
 						'http://localhost:8080/setOrder',
 						 btoa(arrayBuffer2String(encryptedOrderList)),
-						 b64RsaPublicKey,
+						 b64RsaPublicKey, 
 						 undefined)
 				})
 				.then(responseCode => {
@@ -60,13 +59,14 @@ var webclient = new Vue({
 								this.productList[i].amount = 0;
 							}				
 						}
-					}	
+					}
+					this.disabledSendUpdButton = true; 	
 				})	
 			}else{
 				alert('The order is empty!');
 			}	
 		},
-		requestOrderList: function(){
+		clickRequestOrderList: function(){
 			var self = this;
 			var encrResponse;
 			var pos = 0;
@@ -118,20 +118,58 @@ var webclient = new Vue({
 				var orderList = JSON.parse(orders.replace(/\]\[/g, ","));
 
 				for(var i=0; i<this.productList.length; i++){
+					this.productList[i].amount = 0;	
 					for(var j=0; j<orderList.length; j++){
 						if(this.productList[i].name === orderList[j].name){
 							this.productList[i].amount += orderList[j].amount;
 						}
 					}
 				}
+				this.disabledSendUpdButton = false;
 			})
 		},
-		createKeyPair: function(){
+		clickCreateKeyPair: function(){
   			generateRsaKeyPair()
 			.then(rsaKeyPair => {
 				writeKeyPair(rsaKeyPair);
 				this.prepareKeys();
 			})
+  		},
+  		clickRequestProductList: function(){
+  			return this.requestProductList()
+			.then(products => {
+				var buffer = new Array();
+				//don't work without buffer (with productList)
+				for(var i = 0; i < products.length; i++){
+					buffer[i] = new Order(products[i].name, products[i].price, 0);
+				}
+				this.productList = buffer;	
+			})
+			this.disabledSendUpdButton = true; 
+  		},
+  		clickSendUpdOrder: function(){
+  			this.createSignedRequest(this.productList, "http://localhost:8080/updateOrder")
+  			.then(responseCode => {
+  				console.log(responseCode);
+
+  				if(responseCode === 200){
+					alert('The update order was send.');
+					this.totalPrice = 0;
+
+					for(var i = 0; i < this.productList.length; i++){
+						this.productList[i].amount = 0;			
+					}
+
+					this.createExportedPublicKeysArray()
+					.then(exportedPublicKeysArray => {
+						return this.createSignedRequest(exportedPublicKeysArray, "http://localhost:8080/deleteUsers");
+					})
+					.then(responseCode => {
+						console.log(responseCode);
+					})
+				}
+				this.disabledSendUpdButton = true;
+  			})
   		},
   		prepareKeys: function(){
   			return readKeyPairs()
@@ -217,7 +255,78 @@ var webclient = new Vue({
 				return order;
 			})
 		},
-  		
+  		prepareSign: function(singData){
+  			var rsaPssKey;
+  			var signedData;
+
+  			return generateRsaPss()
+  			.then(rsaPss => {
+  				rsaPssKey = rsaPss;
+  				return signingData(rsaPssKey.privateKey, string2ArrayBuffer(singData));
+  			})
+  			.then(signed => {
+  				signedData = signed;
+  				return exportRsaPss(rsaPssKey.publicKey);
+  			})
+  			.then(exportedRsaPss => {
+  				var expordedRsaPssKey = JSON.stringify(transformPublicKey(exportedRsaPss));
+
+  				return {
+  					expordedRsaPssKey,
+  					signedData
+  				}
+  			})
+  		},
+  		createExportedPublicKeysArray: function(){
+  			var keyIndex = 0;
+  			var keysArray = [];
+
+  			var p = new Promise((resolve, reject) => {
+				resolve(rep());
+
+				function rep(){
+					return exportPublicRsaKey(this.allKeyPairs[keyIndex].publicKey)
+					.then(publicKeyArrayBuffer => {
+						keysArray[keyIndex] =  btoa(arrayBuffer2String(publicKeyArrayBuffer))
+						keyIndex++;
+
+						if(keyIndex < this.allKeyPairs.length-1){
+							return rep();
+						}else{
+							return keysArray;
+						}
+					})		
+				}
+			})
+			return p;
+  		},
+  		createSignedRequest: function(dataArray, url){
+  			var ecnryptedData;
+  			var serverPublicKey;
+
+  			return this.requestServerPublicKey()
+  			.then(spk => {
+  				serverPublicKey = spk;
+  				return this.encryptData(serverPublicKey, dataArray);
+  			})
+  			.then(encrData => {
+  				ecnryptedData = encrData;
+  				return this.prepareSign('key');
+  			})
+  			.then(pssData => {
+  				var sign = new Uint8Array(pssData.signedData);
+				var order =  new Uint8Array(ecnryptedData.length + sign.length);
+				
+				order.set(ecnryptedData);
+				order.set(sign, ecnryptedData.length);
+
+				return requestPOST(
+					url, 
+					btoa(arrayBuffer2String(order)),
+					b64RsaPublicKey,
+					pssData.expordedRsaPssKey)
+  			})
+  		}
 	},
 
 	created: function(){
